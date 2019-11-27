@@ -1,0 +1,27 @@
+version: "3"
+
+services:
+  web_service:
+    container_name: nginx
+    image: nginx:1.16-alpine
+    ports:
+      - 80:80
+      - 443:443
+    volumes:
+      - ./app:/usr/share/nginx/html
+      #- ./web/conf.d:/etc/nginx/conf.d
+    networks:
+      - backend
+
+  php_service:
+    container_name: php
+    image: php:7.3-fpm-alpine
+    volumes:
+      - ./app:/usr/share/nginx/html
+    expose: 
+      - 9000
+    networks:
+      - backend
+
+networks: 
+  backend:
