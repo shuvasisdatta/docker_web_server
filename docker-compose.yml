@@ -1,27 +1,50 @@
-version: "3"
+version: '3'
 
 services:
-  web_service:
-    container_name: nginx
-    image: nginx:1.16-alpine
-    ports:
-      - 80:80
-      - 443:443
+  #PHP Service
+  php:
+    container_name: php-fpm
+    build:
+      context: ./docker/php-fpm
     volumes:
-      - ./app:/usr/share/nginx/html
-      #- ./web/conf.d:/etc/nginx/conf.d
+      - ./src/frontend:/var/www
     networks:
       - backend
 
-  php_service:
-    container_name: php
-    image: php:7.3-fpm-alpine
-    volumes:
-      - ./app:/usr/share/nginx/html
-    expose: 
-      - 9000
+  # Nginx Service
+  nginx:
+    container_name: nginx
+    build:
+      context: ./docker/nginx
+    volumes:      
+      - ./src/frontend:/var/www
+      - ./docker/nginx/nginx.conf:/etc/nginx/nginx.conf
+      - ./docker/nginx/sites/:/etc/nginx/sites-available
+      - ./docker/nginx/conf.d/:/etc/nginx/conf.d
+    ports:
+      - 8000:80
+      - 443:443
     networks:
       - backend
+      - frontend
+    depends_on:
+      - php
+      - db
+
+  # Postgres Service
+  db:
+    container_name: postgres
+    build:
+      context: ./docker/db
+    ports:
+      - 5432:5432
+    networks:
+      - backend
+    environment:
+      - POSTGRES_DB=${DB_NAME}
+      - POSTGRES_USER=${DB_USER}
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
 
 networks: 
   backend:
+  frontend:
